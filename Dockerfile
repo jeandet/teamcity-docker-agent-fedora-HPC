@@ -64,12 +64,19 @@ RUN mkdir -p /opt/intel/licenses/
 RUN wget http://jetons.polytechnique.fr/licences/intel/license.lic -O /opt/intel/licenses/license.lic
 RUN wget http://jetons.polytechnique.fr/licences/intel/server.lic -O /opt/intel/licenses/server.lic
 
+RUN wget https://sourceforge.net/projects/env2/files/env2/download -O /env2
+RUN chmod +x /env2
+
 # ICC 2018
 RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2018_update1_composer_edition.tgz
 RUN tar -xf parallel_studio_xe_2018_update1_composer_edition.tgz
 COPY silent-icc2018.cfg /silent-icc2018.cfg
 RUN parallel_studio_xe_2018_update1_composer_edition/install.sh -s silent-icc2018.cfg
 RUN rm -rf parallel_studio_xe_2018_update1_composer_edition*
+RUN echo "#%Module" > /etc/modulefiles/intel-2018
+RUN perl env2 -from bash -to modulecmd "/opt/intel-2018/parallel_studio_xe_2018/psxevars.sh intel64"  >> /etc/modulefiles/intel-2018
+
+
 
 # ICC 2017
 RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2017_update4_composer_edition.tgz
@@ -77,6 +84,9 @@ RUN tar -xf parallel_studio_xe_2017_update4_composer_edition.tgz
 COPY silent-icc2017.cfg /silent-icc2017.cfg
 RUN parallel_studio_xe_2017_update4_composer_edition/install.sh -s silent-icc2017.cfg
 RUN rm -rf parallel_studio_xe_2017_update4_composer_edition*
+RUN echo "#%Module" > /etc/modulefiles/intel-2017
+RUN perl env2 -from bash -to modulecmd "/opt/intel-2017/parallel_studio_xe_2017/psxevars.sh intel64"  >> /etc/modulefiles/intel-2017
+
 
 
 RUN mkdir pgilinux-2018-184-x86-64 && cd pgilinux-2018-184-x86-64
@@ -90,6 +100,9 @@ ENV PGI_INSTALL_MPI "true"
 RUN ./install
 RUN cd /
 RUN rm -rf /pgilinux-2018-184-x86-64*
+RUN mkdir /etc/modulefiles/pgi
+RUN cp -r /opt/pgi/modulefiles/* /etc/modulefiles/pgi/
+
 
 
 RUN echo "system.has_qt5=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
