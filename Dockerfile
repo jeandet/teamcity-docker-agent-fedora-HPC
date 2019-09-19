@@ -8,12 +8,13 @@ RUN dnf install -y java-1.8.0-openjdk mercurial git tar gzip unzip xorg-x11-serv
 
 VOLUME /data/teamcity_agent/conf
 ENV CONFIG_FILE=/data/teamcity_agent/conf/buildAgent.properties \
-    TEAMCITY_AGENT_DIST=/opt/buildagent
+    TEAMCITY_AGENT_DIST=/opt/buildagent \
+    TZ=Europe/Paris
 
 RUN mkdir $TEAMCITY_AGENT_DIST
 
 ADD https://teamcity.jetbrains.com/update/buildAgent.zip $TEAMCITY_AGENT_DIST/
-RUN unzip $TEAMCITY_AGENT_DIST/buildAgent.zip -d $TEAMCITY_AGENT_DIST/
+RUN unzip $TEAMCITY_AGENT_DIST/buildAgent.zip -d $TEAMCITY_AGENT_DIST/ && rm $TEAMCITY_AGENT_DIST/buildAgent.zip
 
 LABEL dockerImage.teamcity.version="latest" \
       dockerImage.teamcity.buildNumber="latest"
@@ -27,81 +28,75 @@ RUN useradd -m buildagent && \
     sync
 
 
-RUN dnf install -y findutils
-RUN dnf install -y cppcheck luabind-devel tcl-devel tk-devel lua-devel  ncurses-devel lcov
-RUN dnf install -y git ninja-build ncurses-devel cups-devel zlib-static zlib-devel itstool libpcap-devel SDL2-devel wget redhat-rpm-config  gettext unzip doxygen
-RUN dnf install -y gcc-objc++ flex flex-devel bison-devel bison gcc-objc libasan valgrind libaec-devel
-RUN dnf install -y vala hg mesa-vulkan-devel vulkan-devel
-RUN dnf install -y libwmf-devel qt5*-devel qt*-devel wxGTK-devel wxGTK3-devel
-RUN dnf install -y llvm llvm-devel llvm3.9-devel llvm-static clang-devel llvm-static clang-analyzer libasan libubsan
-RUN dnf install -y boost-*-devel
-RUN dnf install -y openmpi mpich-devel environment-modules openmpi-devel hdf5-devel
-RUN dnf install -y graphviz texlive-*
-RUN dnf install -y gitstats
-RUN dnf install -y python3-scipy python3-numpy
-RUN dnf install -y python2-devel python2-scipy python2-numpy
-RUN dnf install -y python3-sphinx python3-sphinx_rtd_theme python3-breathe python3-docutils
-RUN dnf install -y python2-sphinx python2-sphinx_rtd_theme python2-breathe python2-docutils
+RUN dnf install -y findutils && \
+                   cppcheck luabind-devel tcl-devel tk-devel lua-devel  ncurses-devel lcov && \
+                   git ninja-build ncurses-devel cups-devel zlib-static zlib-devel itstool libpcap-devel SDL2-devel wget redhat-rpm-config  gettext unzip doxygen && \
+                   gcc-objc++ flex flex-devel bison-devel bison gcc-objc libasan valgrind libaec-devel && \
+                   vala hg mesa-vulkan-devel vulkan-devel && \
+                   libwmf-devel qt5*-devel qt*-devel wxGTK-devel wxGTK3-devel && \
+                   llvm llvm-devel llvm3.9-devel llvm-static clang-devel llvm-static clang-analyzer libasan libubsan && \
+                   boost-*-devel && \
+                   openmpi mpich-devel environment-modules openmpi-devel hdf5-devel && \
+                   graphviz texlive-* && \
+                   gitstats && \
+                   python3-scipy python3-numpy && \
+                   python2-devel python2-scipy python2-numpy && \
+                   python3-sphinx python3-sphinx_rtd_theme python3-breathe python3-docutils && \
+                   python2-sphinx python2-sphinx_rtd_theme python2-breathe python2-docutils
 
 
 
 # SonarQube
-RUN wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
-RUN wget http://repo1.maven.org/maven2/org/codehaus/sonar/runner/sonar-runner-dist/2.4/sonar-runner-dist-2.4.zip
-RUN unzip build-wrapper-linux-x86.zip -d /opt/
-RUN unzip sonar-runner-dist-2.4.zip -d /opt/
-RUN ln -s /opt/build-wrapper-linux-x86/build-wrapper-linux-x86-64 /usr/bin/build-wrapper-linux
-RUN ln -s /opt/sonar-runner-2.4/bin/sonar-runner /usr/bin/sonar-runner
-
-RUN rm build-wrapper-linux-x86.zip sonar-runner-dist-2.4.zip
-
-# CLAZY
-RUN git clone https://github.com/KDE/clazy.git /root/clazy
-RUN cd /root/clazy && mkdir build && cd build && cmake ../ && make -j 4 && make install
+RUN wget https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip && \
+    wget http://repo1.maven.org/maven2/org/codehaus/sonar/runner/sonar-runner-dist/2.4/sonar-runner-dist-2.4.zip && \
+    unzip build-wrapper-linux-x86.zip -d /opt/ && \
+    unzip sonar-runner-dist-2.4.zip -d /opt/ && \
+    ln -s /opt/build-wrapper-linux-x86/build-wrapper-linux-x86-64 /usr/bin/build-wrapper-linux && \
+    ln -s /opt/sonar-runner-2.4/bin/sonar-runner /usr/bin/sonar-runner && \
+    rm build-wrapper-linux-x86.zip sonar-runner-dist-2.4.zip
 
 
-RUN mkdir -p /opt/intel/licenses/
-RUN wget http://jetons.polytechnique.fr/licences/intel/license.lic -O /opt/intel/licenses/license.lic
-RUN wget http://jetons.polytechnique.fr/licences/intel/server.lic -O /opt/intel/licenses/server.lic
-
-RUN wget https://sourceforge.net/projects/env2/files/env2/download -O /env2
-RUN chmod +x /env2
+RUN mkdir -p /opt/intel/licenses/  && \
+    wget http://jetons.polytechnique.fr/licences/intel/license.lic -O /opt/intel/licenses/license.lic && \
+    wget http://jetons.polytechnique.fr/licences/intel/server.lic -O /opt/intel/licenses/server.lic && \
+    wget https://sourceforge.net/projects/env2/files/env2/download -O /env2 && \
+    chmod +x /env2 && \
 
 # ICC 2018
-RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2018_update1_composer_edition.tgz
-RUN tar -xf parallel_studio_xe_2018_update1_composer_edition.tgz
 COPY silent-icc2018.cfg /silent-icc2018.cfg
-RUN parallel_studio_xe_2018_update1_composer_edition/install.sh -s silent-icc2018.cfg
-RUN rm -rf parallel_studio_xe_2018_update1_composer_edition*
-RUN echo "#%Module" > /etc/modulefiles/intel-2018
-RUN perl env2 -from bash -to modulecmd "/opt/intel-2018/parallel_studio_xe_2018/psxevars.sh intel64"  >> /etc/modulefiles/intel-2018
+RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2018_update1_composer_edition.tgz && \
+    tar -xf parallel_studio_xe_2018_update1_composer_edition.tgz && \
+    parallel_studio_xe_2018_update1_composer_edition/install.sh -s silent-icc2018.cfg && \
+    rm -rf parallel_studio_xe_2018_update1_composer_edition* && \
+    echo "#%Module" > /etc/modulefiles/intel-2018 && \
+    perl env2 -from bash -to modulecmd "/opt/intel-2018/parallel_studio_xe_2018/psxevars.sh intel64"  >> /etc/modulefiles/intel-2018
 
 
 
 # ICC 2017
-RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2017_update4_composer_edition.tgz
-RUN tar -xf parallel_studio_xe_2017_update4_composer_edition.tgz
 COPY silent-icc2017.cfg /silent-icc2017.cfg
-RUN parallel_studio_xe_2017_update4_composer_edition/install.sh -s silent-icc2017.cfg
-RUN rm -rf parallel_studio_xe_2017_update4_composer_edition*
-RUN echo "#%Module" > /etc/modulefiles/intel-2017
-RUN perl env2 -from bash -to modulecmd "/opt/intel-2017/parallel_studio_xe_2017/psxevars.sh intel64"  >> /etc/modulefiles/intel-2017
+RUN wget http://pc-instru.lpp.polytechnique.fr/setups/parallel_studio_xe_2017_update4_composer_edition.tgz && \
+    tar -xf parallel_studio_xe_2017_update4_composer_edition.tgz && \
+    parallel_studio_xe_2017_update4_composer_edition/install.sh -s silent-icc2017.cfg && \
+    rm -rf parallel_studio_xe_2017_update4_composer_edition* && \
+    echo "#%Module" > /etc/modulefiles/intel-2017 && \
+    perl env2 -from bash -to modulecmd "/opt/intel-2017/parallel_studio_xe_2017/psxevars.sh intel64"  >> /etc/modulefiles/intel-2017 && \
 
 
-
-RUN mkdir pgilinux-2018-184-x86-64 && cd pgilinux-2018-184-x86-64
-RUN wget http://pc-instru.lpp.polytechnique.fr/setups/pgilinux-2018-184-x86-64.tar.gz
-RUN tar -xf pgilinux-2018-184-x86-64.tar.gz
 ENV PGI_SILENT "true"
 ENV PGI_ACCEPT_EULA "accept"
 ENV PGI_INSTALL_DIR "/opt/pgi"
 ENV PGI_INSTALL_TYPE "single"
 ENV PGI_INSTALL_MPI "true"
-RUN ./install
-RUN cd /
-RUN rm -rf /pgilinux-2018-184-x86-64*
-RUN mkdir /etc/modulefiles/pgi
-RUN cp -r /opt/pgi/modulefiles/* /etc/modulefiles/pgi/
+
+RUN mkdir pgilinux-2018-184-x86-64 && cd pgilinux-2018-184-x86-64 && \
+    wget http://pc-instru.lpp.polytechnique.fr/setups/pgilinux-2018-184-x86-64.tar.gz && \
+    tar -xf pgilinux-2018-184-x86-64.tar.gz && \
+    ./install && \
+    cd / && \
+    rm -rf /pgilinux-2018-184-x86-64* && \
+    mkdir /etc/modulefiles/pgi && \
+    cp -r /opt/pgi/modulefiles/* /etc/modulefiles/pgi/
 
 
 
@@ -112,7 +107,6 @@ RUN echo "system.has_qt5=true" >> /opt/buildagent/conf/buildAgent.dist.propertie
     echo "system.pgi_version=2018" >> /opt/buildagent/conf/buildAgent.dist.properties && \
     echo "system.has_gcov=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
     echo "system.has_clang=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
-    echo "system.has_clazy=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
     echo "system.has_cppcheck=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
     echo "system.has_clang_analyzer=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
     echo "system.has_lcov=true" >> /opt/buildagent/conf/buildAgent.dist.properties && \
